@@ -14,3 +14,6 @@ jobs:
       - uses: bluefireteam/flutter-gh-pages@v7
         with:
           workingDir: example
+          # set the corresponding github page base url
+          # this is required so the index.html finds the necessary resources
+          baseHref: /freestyle_speed_dial/
