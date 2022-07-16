@@ -2,6 +2,8 @@ name: freestyle_speed_dial
 description: A lightweight yet powerful speed dial widget for Flutter.
 version: 1.0.0
 homepage: https://github.com/Robbendebiene/freestyle_speed_dial
+repository: https://github.com/Robbendebiene/freestyle_speed_dial
+issue_tracker: https://github.com/Robbendebiene/freestyle_speed_dial/issues
 
 environment:
   sdk: ">=2.17.5 <3.0.0"
