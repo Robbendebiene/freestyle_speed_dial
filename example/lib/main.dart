@@ -10,7 +10,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,12 +19,27 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color.fromARGB(255, 18, 32, 47),
         materialTapTargetSize:  MaterialTapTargetSize.padded
       ),
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: SizedBox.expand(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
+      home: const ExamplePage()
+    );
+  }
+}
+
+
+class ExamplePage extends StatelessWidget {
+  const ExamplePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: min(200, MediaQuery.of(context).size.width/3),
+            vertical: 200
+          ),
+          child: Wrap(
+            spacing: 200,
+            runSpacing: 200, 
             children: [
 
 
