@@ -4,9 +4,9 @@ It offers full control over the appearance, layout and animations of the sub-but
 
 ## Examples
 
-Run the example project to see some example layouts and animations or watch the [demo video](https://raw.githubusercontent.com/Robbendebiene/freestyle_speed_dial/master/resources/examples.mp4).
+Try the **[live demo](https://robbendebiene.github.io/freestyle_speed_dial/)** or run the example project to see some example layouts and animations.
 
-[<img src="https://raw.githubusercontent.com/Robbendebiene/freestyle_speed_dial/master/resources/examples.png" />](https://raw.githubusercontent.com/Robbendebiene/freestyle_speed_dial/master/resources/examples.mp4)
+[<img src="https://raw.githubusercontent.com/Robbendebiene/freestyle_speed_dial/master/resources/examples.png" />](https://robbendebiene.github.io/freestyle_speed_dial/)
 
 
 ## Usage
