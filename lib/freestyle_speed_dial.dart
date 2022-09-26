@@ -2,10 +2,18 @@ library freestyle_speed_dial;
 
 import 'package:flutter/material.dart';
 
+typedef SpeedDialButtonBuilder = Widget Function(
+  BuildContext context,
+  bool isActive,
+  VoidCallback toggle,
+);
 
-typedef SpeedDialButtonBuilder = Widget Function(BuildContext context, bool isActive, VoidCallback toggle);
-
-typedef SpeedDialItemBuilder<T> = Widget Function(BuildContext context, T item, int index, Animation<double> animation);
+typedef SpeedDialItemBuilder<T> = Widget Function(
+  BuildContext context,
+  T item,
+  int index,
+  Animation<double> animation,
+);
 
 /// This widget can be used to create speed dial buttons of all kinds of styles.
 ///
@@ -125,20 +133,18 @@ class SpeedDialBuilder<T> extends StatefulWidget {
     this.curve = Curves.easeOutBack,
     this.reverseCurve = Curves.easeOutBack,
     Key? key,
-  }) :
-    assert(
-      animationOverlap >= 0 && animationOverlap <= 1,
-      'The value of the `animationOverlap` property should lie between 0 (successive animation) and 1 (simultaneous animation).'
-    ),
-    super(key: key);
-
+  })  : assert(
+          animationOverlap >= 0 && animationOverlap <= 1,
+          'The value of the `animationOverlap` property should lie between 0 (successive animation) and 1 (simultaneous animation).',
+        ),
+        super(key: key);
 
   @override
   State createState() => _SpeedDialBuilderState<T>();
 }
 
-
-class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>> with SingleTickerProviderStateMixin {
+class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
+    with SingleTickerProviderStateMixin {
   late double _intervalLength, _intervalOffset;
 
   final _buttonLayerLink = LayerLink();
@@ -146,7 +152,7 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>> with SingleTi
   late final _controller = AnimationController(vsync: this);
 
   late final _overlayEntry = OverlayEntry(
-    builder: _overlayEntryBuilder
+    builder: _overlayEntryBuilder,
   );
 
   @override
@@ -166,7 +172,6 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>> with SingleTi
     });
   }
 
-
   @override
   void didUpdateWidget(oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -174,7 +179,7 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>> with SingleTi
     _calcAnimationValues();
 
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _overlayEntry.markNeedsBuild()
+      (_) => _overlayEntry.markNeedsBuild(),
     );
   }
 
@@ -188,11 +193,11 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>> with SingleTi
     _overlayEntry.markNeedsBuild();
   }
 
-
   // pre calculate necessary variables
   void _calcAnimationValues() {
     // calculate animation scale factor based on overlap value and number of entries
-    final animationLengthScale = 1 + ((1 - widget.animationOverlap) * (widget.items.length - 1));
+    final animationLengthScale =
+        1 + ((1 - widget.animationOverlap) * (widget.items.length - 1));
 
     // the length of one sub interval in a total interval from 0 to 1
     _intervalLength = 1 / animationLengthScale;
@@ -208,7 +213,6 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>> with SingleTi
     _controller.reverseDuration = widget.reverseDuration * animationLengthScale;
   }
 
-
   Widget _overlayEntryBuilder(BuildContext overlayContext) {
     return Stack(
       children: [
@@ -221,28 +225,34 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>> with SingleTi
             followerAnchor: widget.itemAnchor,
             offset: widget.offset,
             child: widget.itemBuilder(
-              overlayContext, widget.items[i], i, _getAnimation(i)
-            )
-          )
+              overlayContext,
+              widget.items[i],
+              i,
+              _getAnimation(i),
+            ),
+          ),
         ),
         // add secondary items to stack/overlay if a builder is defined
         // this also aligns every item to the main button for consistency
-        if (widget.secondaryItemBuilder != null) ...Iterable.generate(
-          widget.items.length,
-          (i) => CompositedTransformFollower(
-            link: _buttonLayerLink,
-            targetAnchor: widget.buttonAnchor,
-            followerAnchor: widget.itemAnchor,
-            offset: widget.offset,
-            child: widget.secondaryItemBuilder!(
-              overlayContext, widget.items[i], i, _getAnimation(i)
-            )
-          )
-        )
-      ]
+        if (widget.secondaryItemBuilder != null)
+          ...Iterable.generate(
+            widget.items.length,
+            (i) => CompositedTransformFollower(
+              link: _buttonLayerLink,
+              targetAnchor: widget.buttonAnchor,
+              followerAnchor: widget.itemAnchor,
+              offset: widget.offset,
+              child: widget.secondaryItemBuilder!(
+                overlayContext,
+                widget.items[i],
+                i,
+                _getAnimation(i),
+              ),
+            ),
+          ),
+      ],
     );
   }
-
 
   CurvedAnimation _getAnimation(int index) {
     index = widget.reverse ? widget.items.length - index - 1 : index;
@@ -255,30 +265,29 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>> with SingleTi
       curve: Interval(
         start,
         end,
-        curve: widget.curve
+        curve: widget.curve,
       ),
       reverseCurve: Interval(
         start,
         end,
-        curve: widget.reverseCurve
+        curve: widget.reverseCurve,
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
     return CompositedTransformTarget(
       link: _buttonLayerLink,
-      child:  widget.buttonBuilder(context, isActive, toggle)
+      child: widget.buttonBuilder(context, isActive, toggle),
     );
   }
 
   /// Whether the speed dial is open or closed.
 
-  bool get isActive {
-    return _controller.status == AnimationStatus.forward || _controller.status == AnimationStatus.completed;
-  }
+  bool get isActive =>
+      _controller.status == AnimationStatus.forward ||
+      _controller.status == AnimationStatus.completed;
 
   /// Open/Close the speed dial.
 
@@ -286,17 +295,15 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>> with SingleTi
     if (_controller.isDismissed) {
       Overlay.of(context)?.insert(_overlayEntry);
       _controller.forward();
-    }
-    else {
+    } else {
       _controller.reverse();
     }
   }
 
-
   @override
   void dispose() {
     _controller.dispose();
-    
+
     if (_overlayEntry.mounted) {
       _overlayEntry.remove();
     }
