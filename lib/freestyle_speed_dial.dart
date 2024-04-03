@@ -8,6 +8,12 @@ typedef SpeedDialButtonBuilder = Widget Function(
   VoidCallback toggle,
 );
 
+typedef SpeedDialBackdropBuilder = Widget Function(
+  BuildContext context,
+  Animation<double> animation,
+  VoidCallback close,
+);
+
 typedef SpeedDialItemBuilder<T> = Widget Function(
   BuildContext context,
   T item,
@@ -77,6 +83,28 @@ class SpeedDialBuilder<T> extends StatefulWidget {
   /// Flutters predefined [transition classes](https://docs.flutter.dev/development/ui/widgets/animation).
   final SpeedDialItemBuilder<T>? secondaryItemBuilder;
 
+  /// An optional backdrop builder. Any widget with an infinite size might be returned here, like:
+  /// ```dart
+  /// SizedBox.expand(
+  ///   child: ColoredBox(color: Colors.red),
+  /// ),
+  /// ```
+  ///
+  /// When implementing this you may pass the [close] function to your backdrop widget's gesture detector.
+  ///
+  /// Use the [animation] parameter to animate the backdrop in and out when the speed dial disclosed or collapsed.
+  /// This can be used to animate the backdrop in and out.
+  ///
+  /// Full example using the existing model barrier widget:
+  ///
+  /// ```dart
+  /// backdropBuilder: (context, animation, close) => AnimatedModalBarrier(
+  ///   onDismiss: close,
+  ///   color: ColorTween(end: Colors.red).animate(animation),
+  /// ),
+  /// ```
+  final SpeedDialBackdropBuilder? backdropBuilder;
+
   /// A list of items used by the [itemBuilder] and [secondaryItemBuilder].
   ///
   /// For speed dials without labels you might directly pass the sub-buttons as widgets here.
@@ -122,6 +150,7 @@ class SpeedDialBuilder<T> extends StatefulWidget {
     required this.buttonBuilder,
     required this.itemBuilder,
     required this.items,
+    this.backdropBuilder,
     this.secondaryItemBuilder,
     this.buttonAnchor = Alignment.topCenter,
     this.itemAnchor = Alignment.topCenter,
@@ -216,6 +245,8 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
   Widget _overlayEntryBuilder(BuildContext overlayContext) {
     return Stack(
       children: [
+        if (widget.backdropBuilder != null)
+          widget.backdropBuilder!(overlayContext, _controller, close),
         // align every item to the main button
         ...Iterable.generate(
           widget.items.length,
@@ -299,6 +330,16 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
       _controller.reverse();
     }
   }
+
+  /// Close the speed dial.
+
+  void close() {
+    if (!_controller.isDismissed) {
+      _controller.reverse();
+    }
+  }
+
+
 
   @override
   void dispose() {
