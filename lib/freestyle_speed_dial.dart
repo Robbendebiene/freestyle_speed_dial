@@ -90,12 +90,11 @@ class SpeedDialBuilder<T> extends StatefulWidget {
   /// ),
   /// ```
   ///
-  /// When implementing this you may pass the [close] function to your backdrop widget's gesture detector.
+  /// When implementing this you can pass the [close] function to your backdrop widget's gesture detector.
   ///
-  /// Use the [animation] parameter to animate the backdrop in and out when the speed dial disclosed or collapsed.
-  /// This can be used to animate the backdrop in and out.
+  /// Use the [animation] parameter to animate the backdrop in and out when the speed dial is beeing disclosed or collapsed.
   ///
-  /// Full example using the existing model barrier widget:
+  /// Example using the existing model barrier widget:
   ///
   /// ```dart
   /// backdropBuilder: (context, animation, close) => AnimatedModalBarrier(
