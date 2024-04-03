@@ -119,24 +119,24 @@ SpeedDialBuilder(
     onPressed: toggle,
     child: Icon( isActive ? Icons.close : Icons.add )
   ),
-  itemBuilder: (context, Tuple3<IconData, String, LayerLink> item, i, animation) {
+  itemBuilder: (context, (IconData, String, LayerLink) item, i, animation) {
     return FractionalTranslation(
       translation: Offset(0, -i.toDouble()),
       child: CompositedTransformTarget(
-        link: item.item3,
+        link: item.$3,
         child: ScaleTransition(
           scale: animation,
           child: FloatingActionButton.small(
             onPressed: () {},
-            child: Icon(item.item1),
+            child: Icon(item.$1),
           ),
         )
       )
     );
   },
-  secondaryItemBuilder: (context, Tuple3<IconData, String, LayerLink> item, i, animation) {
+  secondaryItemBuilder: (context, (IconData, String, LayerLink) item, i, animation) {
     return CompositedTransformFollower(
-      link: item.item3,
+      link: item.$3,
       targetAnchor: Alignment.centerRight,
       followerAnchor: Alignment.centerLeft,
       child: FadeTransition(
@@ -145,21 +145,15 @@ SpeedDialBuilder(
           margin: const EdgeInsets.only( left: 10 ),
           child: Padding(
             padding: const EdgeInsets.all(5),
-            child: Text(item.item2),
+            child: Text(item.$2),
           )
         )
       )
     );
   },
   items: [
-    // You can also define and use your own container class
-    // if you don't want to use the tuple package.
-    Tuple3<IconData, String, LayerLink>(
-      Icons.hub, 'Hub', LayerLink()
-    ),
-    Tuple3<IconData, String, LayerLink>(
-      Icons.track_changes, 'Track', LayerLink()
-    )
+    (Icons.hub, 'Hub', LayerLink()),
+    (Icons.track_changes, 'Track', LayerLink())
   ]
 )
 ```

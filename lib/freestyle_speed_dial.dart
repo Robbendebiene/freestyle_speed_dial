@@ -109,7 +109,7 @@ class SpeedDialBuilder<T> extends StatefulWidget {
   /// For speed dials without labels you might directly pass the sub-buttons as widgets here.
   ///
   /// If you want to show labels using the [secondaryItemBuilder] then either pass the necessary data
-  /// with a custom class, a list of [Map]s, or a Tuple from the [tuple package](https://pub.dev/packages/tuple).
+  /// with a [Record](https://dart.dev/language/records), a custom class, or [Map]s.
   final List<T> items;
 
   /// Define if the animation should start with the first or last item from the list.
