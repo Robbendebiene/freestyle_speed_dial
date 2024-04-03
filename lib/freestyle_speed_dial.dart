@@ -177,11 +177,9 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
 
   final _buttonLayerLink = LayerLink();
 
-  late final _controller = AnimationController(vsync: this);
+  final _overlayPortalController = OverlayPortalController();
 
-  late final _overlayEntry = OverlayEntry(
-    builder: _overlayEntryBuilder,
-  );
+  late final _controller = AnimationController(vsync: this);
 
   @override
   void initState() {
@@ -194,7 +192,7 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
       setState(() {
         if (status == AnimationStatus.dismissed) {
           // remove overlay / hide speed dial buttons
-          _overlayEntry.remove();
+          _overlayPortalController.hide();
         }
       });
     });
@@ -205,10 +203,6 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
     super.didUpdateWidget(oldWidget);
 
     _calcAnimationValues();
-
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _overlayEntry.markNeedsBuild(),
-    );
   }
 
   // trigger overlay rebuild on hot reload
@@ -217,8 +211,6 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
     super.reassemble();
 
     _calcAnimationValues();
-
-    _overlayEntry.markNeedsBuild();
   }
 
   // pre calculate necessary variables
@@ -307,9 +299,13 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
 
   @override
   Widget build(BuildContext context) {
-    return CompositedTransformTarget(
-      link: _buttonLayerLink,
-      child: widget.buttonBuilder(context, isActive, toggle),
+    return OverlayPortal(
+      controller: _overlayPortalController,
+      overlayChildBuilder: _overlayEntryBuilder,
+      child: CompositedTransformTarget(
+        link: _buttonLayerLink,
+        child: widget.buttonBuilder(context, isActive, toggle),
+      ),
     );
   }
 
@@ -323,7 +319,7 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
 
   void toggle() {
     if (_controller.isDismissed) {
-      Overlay.of(context)?.insert(_overlayEntry);
+      _overlayPortalController.show();
       _controller.forward();
     } else {
       _controller.reverse();
@@ -338,17 +334,9 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
     }
   }
 
-
-
   @override
   void dispose() {
     _controller.dispose();
-
-    if (_overlayEntry.mounted) {
-      _overlayEntry.remove();
-    }
-    _overlayEntry.dispose();
-
     super.dispose();
   }
 }
