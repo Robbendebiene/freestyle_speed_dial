@@ -13,8 +13,8 @@ Try the **[live demo](https://robbendebiene.github.io/freestyle_speed_dial/)** o
 
 ### Building the main button
 
-The starting point of ever speed dial button is a main toggle button. Use the `buttonBuilder` to create your own custom toggle button. You can use any combination of widgets there. The only important thing is, that one of the widgets must call the `toggle` function provided by the builder on your desired user interaction.
-To reflect the state of the speed dial you can alter your widget based on the `isActive` parameter. To transition between both states consider using an `AnimatedSwitcher` or any other [flutter implicitly animated widget](https://api.flutter.dev/flutter/widgets/ImplicitlyAnimatedWidget-class.html).
+The starting point of every speed dial button is the main toggle button. Use the `buttonBuilder` to create your own custom toggle button. You can use any combination of widgets there. The only important thing is, that one of the widgets must call the `controller.toggle` function provided by the builder on your desired user interaction.
+To reflect the state of the speed dial you can alter your widget based on the `controller.isActive`, `controller.status` or `controller.animation` parameter using a transition widget or something like an [AnimatedBuilder](https://api.flutter.dev/flutter/widgets/AnimatedBuilder-class.html). Either listen to the `controller` for status changes or to the `controller.animation` to animate together with the speed dial.
 
 Basic example code:
 
@@ -22,9 +22,14 @@ Basic example code:
 ```dart
 SpeedDialBuilder(
   ...
-  buttonBuilder: (context, isActive, toggle) => FloatingActionButton(
-    onPressed: toggle,
-    child: Icon( isActive ? Icons.close : Icons.add )
+  buttonBuilder: (context, controller) => FloatingActionButton(
+    onPressed: controller.toggle,
+    child: ListenableBuilder(
+      listenable: controller,
+      builder: (BuildContext context, Widget? child) {
+        return Icon( controller.isActive ? Icons.close : Icons.add );
+      }
+    )
   )
 )
 ```
@@ -61,7 +66,7 @@ SpeedDialBuilder(
   ...
   buttonAnchor: Alignment.topCenter,
   itemAnchor: Alignment.bottomCenter,
-  itemBuilder: (context, Widget item, i, animation) => FractionalTranslation(
+  itemBuilder: (context, Widget item, i, animation, controller) => FractionalTranslation(
     translation: Offset(0, -i.toDouble()),
     child: ScaleTransition(
       scale: animation,
@@ -80,11 +85,16 @@ Think of it as defining two points, one on the main button that is fixed and one
 SpeedDialBuilder(
   buttonAnchor: Alignment.topCenter,
   itemAnchor: Alignment.bottomCenter,
-  buttonBuilder: (context, isActive, toggle) => FloatingActionButton(
-    onPressed: toggle,
-    child: Icon( isActive ? Icons.close : Icons.add )
+  buttonBuilder: (context, controller) => FloatingActionButton(
+    onPressed: controller.toggle,
+    child: ListenableBuilder(
+      listenable: controller,
+      builder: (BuildContext context, Widget? child) {
+        return Icon( controller.isActive ? Icons.close : Icons.add );
+      }
+    )
   ),
-  itemBuilder: (context, Widget item, i, animation) => FractionalTranslation(
+  itemBuilder: (context, Widget item, i, animation, controller) => FractionalTranslation(
     translation: Offset(0, -i.toDouble()),
     child: ScaleTransition(
       scale: animation,
@@ -115,11 +125,16 @@ The below example uses the `secondaryItemBuilder` in combination with Flutters [
 SpeedDialBuilder(
   buttonAnchor: Alignment.topCenter,
   itemAnchor: Alignment.bottomCenter,
-  buttonBuilder: (context, isActive, toggle) => FloatingActionButton(
-    onPressed: toggle,
-    child: Icon( isActive ? Icons.close : Icons.add )
+  buttonBuilder: (context, controller) => FloatingActionButton(
+    onPressed: controller.toggle,
+    child: ListenableBuilder(
+      listenable: controller,
+      builder: (BuildContext context, Widget? child) {
+        return Icon( controller.isActive ? Icons.close : Icons.add );
+      }
+    )
   ),
-  itemBuilder: (context, (IconData, String, LayerLink) item, i, animation) {
+  itemBuilder: (context, (IconData, String, LayerLink) item, i, animation, controller) {
     return FractionalTranslation(
       translation: Offset(0, -i.toDouble()),
       child: CompositedTransformTarget(
@@ -134,7 +149,7 @@ SpeedDialBuilder(
       )
     );
   },
-  secondaryItemBuilder: (context, (IconData, String, LayerLink) item, i, animation) {
+  secondaryItemBuilder: (context, (IconData, String, LayerLink) item, i, animation, controller) {
     return CompositedTransformFollower(
       link: item.$3,
       targetAnchor: Alignment.centerRight,
