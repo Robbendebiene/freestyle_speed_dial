@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  FLUTTER_SDK_VERSION: '3.3.9'
+  FLUTTER_SDK_VERSION: '3.19.0'
   FLUTTER_BASE_HREF: '/freestyle_speed_dial/'
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v2
@@ -36,7 +36,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_SDK_VERSION }}
-          channel: 'stable'
+          channel: stable
 
       - name: Download pub dependencies
         working-directory: example
