@@ -46,41 +46,24 @@ class ExamplePage extends StatelessWidget {
               // Simple speed dial where every sub-button/item animates starting
               // from its own final position.
               SpeedDialBuilder(
-                buttonBuilder: (context, isActive, toggle) => FloatingActionButton(
-                  onPressed: toggle,
-                  child: AnimatedRotation(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOutCubicEmphasized,
-                    turns: isActive ? 0.125 : 0,
-                    child: const Icon( Icons.add )
-                  )
-                ),
+                buttonBuilder: spinButtonBuilder,
                 buttonAnchor: Alignment.topCenter,
                 itemAnchor: Alignment.bottomCenter,
-                itemBuilder: (context, Widget item, i, animation) => FractionalTranslation(
+                itemBuilder: (context, Widget item, i, animation, controller) => FractionalTranslation(
                   translation: Offset(0, -i.toDouble()),
                   child: ScaleTransition(
                     scale: animation,
-                    child: item
+                    child: FloatingActionButton.small(
+                      onPressed: controller.close,
+                      child: item,
+                    ),
                   )
                 ),
-                items: [
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.hub),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.file_download),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.wallet),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.sd_card),
-                  )
+                items: const [
+                  Icon(Icons.hub),
+                  Icon(Icons.file_download),
+                  Icon(Icons.wallet),
+                  Icon(Icons.sd_card),
                 ]
               ),
 
@@ -89,18 +72,10 @@ class ExamplePage extends StatelessWidget {
               // Simple speed dial where every sub-button/item animates starting
               // from the FABs position to its final position.
               SpeedDialBuilder(
-                buttonBuilder: (context, isActive, toggle) => FloatingActionButton(
-                  onPressed: toggle,
-                  child: AnimatedRotation(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOutCubicEmphasized,
-                    turns: isActive ? 0.125 : 0,
-                    child: const Icon( Icons.add )
-                  )
-                ),
+                buttonBuilder: spinButtonBuilder,
                 curve: Curves.easeInOutCubicEmphasized,
                 reverse: true,
-                itemBuilder: (context, Widget item, i, animation) {
+                itemBuilder: (context, Widget item, i, animation, controller) {
                   final offsetAnimation = Tween<Offset>(
                     begin: Offset.zero,
                     end: Offset(0, -i - 1),
@@ -109,27 +84,18 @@ class ExamplePage extends StatelessWidget {
                     position: offsetAnimation,
                     child: FadeTransition(
                       opacity: animation,
-                      child: item,
+                      child: FloatingActionButton.small(
+                        onPressed: controller.close,
+                        child: item,
+                      ),
                     )
                   );
                 },
-                items: [
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.hub),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.file_download),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.wallet),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.sd_card),
-                  )
+                items: const [
+                  Icon(Icons.hub),
+                  Icon(Icons.file_download),
+                  Icon(Icons.wallet),
+                  Icon(Icons.sd_card),
                 ]
               ),
 
@@ -140,26 +106,20 @@ class ExamplePage extends StatelessWidget {
               SpeedDialBuilder(
                 buttonAnchor: Alignment.center,
                 itemAnchor: Alignment.center,
-                buttonBuilder: (context, isActive, toggle) => FloatingActionButton(
-                  onPressed: toggle,
-                  child: AnimatedRotation(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOutCubicEmphasized,
-                    turns: isActive ? 0.125 : 0,
-                    child: const Icon( Icons.add )
-                  )
-                ),
+                buttonBuilder: spinButtonBuilder,
                 curve: Curves.easeInOutCubicEmphasized,
                 reverse: true,
-                itemBuilder: (context, Widget item, i, animation) {
+                itemBuilder: (context, Widget item, i, animation, controller) {
                   // radius in relative units to each item
                   const radius = 1.3;
+                  // item spacing
+                  const spacing = 0.1;
                   // angle in radians
                   const angle = -3/4 * pi;
 
                   final targetOffset = Offset(
-                    (i + radius) * cos(angle),
-                    (i + radius) * sin(angle)
+                    (i + radius) * cos(angle) - i * spacing,
+                    (i + radius) * sin(angle) - i * spacing
                   );
 
                   final offsetAnimation = Tween<Offset>(
@@ -170,27 +130,18 @@ class ExamplePage extends StatelessWidget {
                     position: offsetAnimation,
                     child: FadeTransition(
                       opacity: animation,
-                      child: item,
+                      child: FloatingActionButton.small(
+                        onPressed: controller.close,
+                        child: item,
+                      ),
                     )
                   );
                 },
-                items: [
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.hub),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.file_download),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.wallet),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.sd_card),
-                  )
+                items: const [
+                  Icon(Icons.hub),
+                  Icon(Icons.file_download),
+                  Icon(Icons.wallet),
+                  Icon(Icons.sd_card),
                 ]
               ),
 
@@ -201,16 +152,8 @@ class ExamplePage extends StatelessWidget {
               SpeedDialBuilder(
                 buttonAnchor: Alignment.center,
                 itemAnchor: Alignment.center,
-                buttonBuilder: (context, isActive, toggle) => FloatingActionButton(
-                  onPressed: toggle,
-                  child: AnimatedRotation(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOutCubicEmphasized,
-                    turns: isActive ? 0.125 : 0,
-                    child: const Icon( Icons.add )
-                  )
-                ),
-                itemBuilder: (context, Widget item, i, animation) {
+                buttonBuilder: spinButtonBuilder,
+                itemBuilder: (context, Widget item, i, animation, controller) {
                   // radius in relative units to each item
                   const radius = 1.3;
                   // angle in radians
@@ -230,23 +173,17 @@ class ExamplePage extends StatelessWidget {
                     position: offsetAnimation,
                     child: FadeTransition(
                       opacity: animation,
-                      child: item,
+                      child: FloatingActionButton.small(
+                        onPressed: controller.close,
+                        child: item,
+                      ),
                     )
                   );
                 },
-                items: [
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.hub),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.file_download),
-                  ),
-                  FloatingActionButton.small(
-                    onPressed: () {},
-                    child: const Icon(Icons.wallet),
-                  ),
+                items: const [
+                  Icon(Icons.hub),
+                  Icon(Icons.file_download),
+                  Icon(Icons.wallet),
                 ]
               ),
 
@@ -257,16 +194,8 @@ class ExamplePage extends StatelessWidget {
               SpeedDialBuilder(
                 buttonAnchor: Alignment.topCenter,
                 itemAnchor: Alignment.bottomCenter,
-                buttonBuilder: (context, isActive, toggle) => FloatingActionButton(
-                  onPressed: toggle,
-                  child: AnimatedRotation(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOutCubicEmphasized,
-                    turns: isActive ? 0.125 : 0,
-                    child: const Icon( Icons.add )
-                  )
-                ),
-                itemBuilder: (context, (IconData, String, LayerLink) item, i, animation) {
+                buttonBuilder: spinButtonBuilder,
+                itemBuilder: (context, (IconData, String, LayerLink) item, i, animation, controller) {
                   return FractionalTranslation(
                     translation: Offset(0, -i.toDouble()),
                     child: CompositedTransformTarget(
@@ -274,14 +203,14 @@ class ExamplePage extends StatelessWidget {
                       child: ScaleTransition(
                         scale: animation,
                         child: FloatingActionButton.small(
-                          onPressed: () {},
+                          onPressed: controller.close,
                           child: Icon(item.$1),
                         ),
                       )
                     )
                   );
                 },
-                secondaryItemBuilder: (context, (IconData, String, LayerLink) item, i, animation) {
+                secondaryItemBuilder: (context, (IconData, String, LayerLink) item, i, animation, controller) {
                   return CompositedTransformFollower(
                     link: item.$3,
                     targetAnchor: Alignment.centerRight,
@@ -300,7 +229,7 @@ class ExamplePage extends StatelessWidget {
                 },
                 items: [
                   // You can also define and use your own container class
-                  // if you don't want to use the tuple package.
+                  // if you don't want to use records.
                   (Icons.hub, 'Hub', LayerLink()),
                   (Icons.track_changes, 'Track', LayerLink()),
                   (Icons.ice_skating_outlined, 'Ice', LayerLink()),
@@ -312,17 +241,9 @@ class ExamplePage extends StatelessWidget {
               // Advanced speed dial where every sub-button/item has an additional label.
               // Both the item and the label start animating from their target position.
               SpeedDialBuilder(
-                buttonBuilder: (context, isActive, toggle) => FloatingActionButton(
-                  onPressed: toggle,
-                  child: AnimatedRotation(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOutCubicEmphasized,
-                    turns: isActive ? 0.125 : 0,
-                    child: const Icon( Icons.add )
-                  )
-                ),
+                buttonBuilder: spinButtonBuilder,
                 reverse: true,
-                itemBuilder: (context, (IconData, String, LayerLink) item, i, animation) {
+                itemBuilder: (context, (IconData, String, LayerLink) item, i, animation, controller) {
                   final offsetAnimation = Tween<Offset>(
                     begin: Offset.zero,
                     end: Offset(0, -i - 1),
@@ -334,14 +255,14 @@ class ExamplePage extends StatelessWidget {
                       child: CompositedTransformTarget(
                         link: item.$3,
                         child: FloatingActionButton.small(
-                          onPressed: () {},
+                          onPressed: controller.close,
                           child: Icon(item.$1),
                         ),
                       )
                     )
                   );
                 },
-                secondaryItemBuilder: (context, (IconData, String, LayerLink) item, i, animation) {
+                secondaryItemBuilder: (context, (IconData, String, LayerLink) item, i, animation, controller) {
                   return CompositedTransformFollower(
                     link: item.$3,
                     targetAnchor: Alignment.centerRight,
@@ -360,7 +281,7 @@ class ExamplePage extends StatelessWidget {
                 },
                 items: [
                   // You can also define and use your own container class
-                  // if you don't want to use the tuple package.
+                  // if you don't want to use records.
                   (Icons.hub, 'Hub', LayerLink()),
                   (Icons.track_changes, 'Track', LayerLink()),
                   (Icons.ice_skating_outlined, 'Ice', LayerLink()),
@@ -373,3 +294,16 @@ class ExamplePage extends StatelessWidget {
     );
   }
 }
+
+
+Widget spinButtonBuilder(context, controller) => FloatingActionButton(
+  onPressed: controller.toggle,
+  child: RotationTransition(
+    turns: Tween(begin: 0.0, end: 0.125).animate(CurvedAnimation(
+      parent: controller.animation,
+      curve: Curves.easeInOutCubicEmphasized,
+      reverseCurve: Curves.easeInOutCubicEmphasized.flipped,
+    )),
+    child: const Icon( Icons.add )
+  ),
+);
