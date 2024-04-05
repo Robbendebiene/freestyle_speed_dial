@@ -1,17 +1,15 @@
 library freestyle_speed_dial;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 typedef SpeedDialButtonBuilder = Widget Function(
   BuildContext context,
-  bool isActive,
-  VoidCallback toggle,
+  SpeedDialController controller,
 );
 
 typedef SpeedDialBackdropBuilder = Widget Function(
   BuildContext context,
-  Animation<double> animation,
-  VoidCallback close,
+  SpeedDialController controller,
 );
 
 typedef SpeedDialItemBuilder<T> = Widget Function(
@@ -19,6 +17,7 @@ typedef SpeedDialItemBuilder<T> = Widget Function(
   T item,
   int index,
   Animation<double> animation,
+  SpeedDialController controller,
 );
 
 /// This widget can be used to create speed dial buttons of all kinds of styles.
@@ -27,18 +26,18 @@ typedef SpeedDialItemBuilder<T> = Widget Function(
 ///
 /// ```dart
 /// SpeedDialBuilder(
-///   buttonBuilder: (context, isActive, toggle) => FloatingActionButton(
-///     onPressed: toggle,
-///     child: Icon( isActive ? Icons.close : Icons.add )
+///   buttonBuilder: (context, controller) => FloatingActionButton(
+///     onPressed: controller.toggle,
+///     child: const Icon( Icons.check ),
 ///   ),
 ///   buttonAnchor: Alignment.topCenter,
 ///   itemAnchor: Alignment.bottomCenter,
-///   itemBuilder: (context, Widget item, i, animation) => FractionalTranslation(
+///   itemBuilder: (context, Widget item, i, animation, controller) => FractionalTranslation(
 ///     translation: Offset(0, -i.toDouble()),
 ///     child: ScaleTransition(
 ///       scale: animation,
-///       child: item
-///     )
+///       child: item,
+///     ),
 ///   ),
 ///   items: [
 ///     FloatingActionButton.small(
@@ -46,7 +45,7 @@ typedef SpeedDialItemBuilder<T> = Widget Function(
 ///       child: const Icon(Icons.hub),
 ///     ),
 ///     ...
-///   ]
+///   ],
 /// );
 /// ```
 ///
@@ -56,10 +55,25 @@ class SpeedDialBuilder<T> extends StatefulWidget {
   /// The main button builder. This will typically return a [FloatingActionButton].
   /// However any widget with an intrinsic size might be returned here.
   ///
-  /// When implementing this you should pass the [toggle] function to your `onPress` callback.
+  /// When implementing this you can pass the `controller.toggle` function to your `onPressed` callback.
   ///
-  /// The [isActive] parameter indicates whether the button is disclosed/active or collapsed/inactive.
-  /// This can be used to change the style of the button for example by using an [AnimatedSwitcher]
+  /// To style the main button according to the state either use an [AnimatedBuilder] consuming the `controller` to react to `status` changes,
+  /// or use the main animation via `controller.animation` and pass it (or a derivative of it) to a transition widget, [AnimatedBuilder], or [ValueListenableBuilder].
+  ///
+  /// Example of a rotating plus symbol:
+  /// ```dart
+  /// buttonBuilder: (context, controller) => FloatingActionButton(
+  ///   onPressed: controller.toggle,
+  ///   child: RotationTransition(
+  ///     turns: Tween(begin: 0.0, end: 0.125).animate(CurvedAnimation(
+  ///       parent: controller.animation,
+  ///       curve: Curves.easeInOutCubicEmphasized,
+  ///       reverseCurve: Curves.easeInOutCubicEmphasized.flipped,
+  ///     )),
+  ///     child: const Icon( Icons.add ),
+  ///   ),
+  /// );
+  /// ```
   final SpeedDialButtonBuilder buttonBuilder;
 
   /// The builder for the speed dial items. This will typically return a small [FloatingActionButton].
@@ -90,16 +104,17 @@ class SpeedDialBuilder<T> extends StatefulWidget {
   /// ),
   /// ```
   ///
-  /// When implementing this you can pass the [close] function to your backdrop widget's gesture detector.
+  /// When implementing this you can pass the `controller.close` function to your backdrop widget's gesture detector.
   ///
-  /// Use the [animation] parameter to animate the backdrop in and out when the speed dial is beeing disclosed or collapsed.
+  /// To animate the backdrop in and out either use an [AnimatedBuilder] consuming the `controller` to react to `status` changes,
+  /// or use the main animation via `controller.animation` and pass it (or a derivative of it) to a transition widget, [AnimatedBuilder], or [ValueListenableBuilder].
   ///
   /// Example using the existing model barrier widget:
   ///
   /// ```dart
-  /// backdropBuilder: (context, animation, close) => AnimatedModalBarrier(
-  ///   onDismiss: close,
-  ///   color: ColorTween(end: Colors.red).animate(animation),
+  /// backdropBuilder: (context, controller) => AnimatedModalBarrier(
+  ///   onDismiss: controller.close,
+  ///   color: ColorTween(end: Colors.red).animate(controller.animation),
   /// ),
   /// ```
   final SpeedDialBackdropBuilder? backdropBuilder;
@@ -111,6 +126,9 @@ class SpeedDialBuilder<T> extends StatefulWidget {
   /// If you want to show labels using the [secondaryItemBuilder] then either pass the necessary data
   /// with a [Record](https://dart.dev/language/records), a custom class, or [Map]s.
   final List<T> items;
+
+  /// An optional controller to listen to and control the state of the speed dial.
+  final SpeedDialController? controller;
 
   /// Define if the animation should start with the first or last item from the list.
   ///
@@ -149,6 +167,7 @@ class SpeedDialBuilder<T> extends StatefulWidget {
     required this.buttonBuilder,
     required this.itemBuilder,
     required this.items,
+    this.controller,
     this.backdropBuilder,
     this.secondaryItemBuilder,
     this.buttonAnchor = Alignment.topCenter,
@@ -175,42 +194,47 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
     with SingleTickerProviderStateMixin {
   late double _intervalLength, _intervalOffset;
 
+  late SpeedDialController _controller;
+
   final _buttonLayerLink = LayerLink();
 
   final _overlayPortalController = OverlayPortalController();
 
-  late final _controller = AnimationController(vsync: this);
+  late final _animationController = AnimationController(vsync: this);
 
   @override
   void initState() {
     super.initState();
-
+    _setupController();
     _calcAnimationValues();
-
-    _controller.addStatusListener((status) {
-      // trigger rebuild to reflect updates to the "isActive" state
-      setState(() {
-        if (status == AnimationStatus.dismissed) {
-          // remove overlay / hide speed dial buttons
-          _overlayPortalController.hide();
-        }
-      });
-    });
   }
 
   @override
   void didUpdateWidget(oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    if (oldWidget.controller != widget.controller) {
+      // if no controller was passed dispose internally created controller
+      _cleanupController(oldWidget);
+      _setupController();
+    }
+
     _calcAnimationValues();
   }
 
-  // trigger overlay rebuild on hot reload
-  @override
-  void reassemble() {
-    super.reassemble();
+  void _setupController() {
+    _controller = widget.controller ?? SpeedDialController();
+    _controller._attach(_animationController, _overlayPortalController);
+  }
 
-    _calcAnimationValues();
+  void _cleanupController(SpeedDialBuilder<T> widget) {
+    // if no controller was passed dispose internally created controller
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
+    else {
+      _controller._detach();
+    }
   }
 
   // pre calculate necessary variables
@@ -229,15 +253,15 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
     _intervalOffset = _intervalLength - overlapLength;
 
     // stretch length by amount of items minus the animation overlap
-    _controller.duration = widget.duration * animationLengthScale;
-    _controller.reverseDuration = widget.reverseDuration * animationLengthScale;
+    _animationController.duration = widget.duration * animationLengthScale;
+    _animationController.reverseDuration = widget.reverseDuration * animationLengthScale;
   }
 
-  Widget _overlayEntryBuilder(BuildContext overlayContext) {
+  Widget _overlayEntryBuilder(BuildContext context) {
     return Stack(
       children: [
         if (widget.backdropBuilder != null)
-          widget.backdropBuilder!(overlayContext, _controller, close),
+          widget.backdropBuilder!(context, _controller),
         // align every item to the main button
         ...Iterable.generate(
           widget.items.length,
@@ -247,10 +271,11 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
             followerAnchor: widget.itemAnchor,
             offset: widget.offset,
             child: widget.itemBuilder(
-              overlayContext,
+              context,
               widget.items[i],
               i,
               _getAnimation(i),
+              _controller,
             ),
           ),
         ),
@@ -265,10 +290,11 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
               followerAnchor: widget.itemAnchor,
               offset: widget.offset,
               child: widget.secondaryItemBuilder!(
-                overlayContext,
+                context,
                 widget.items[i],
                 i,
                 _getAnimation(i),
+                _controller,
               ),
             ),
           ),
@@ -283,7 +309,7 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
     final end = start + _intervalLength;
 
     return CurvedAnimation(
-      parent: _controller,
+      parent: _animationController,
       curve: Interval(
         start,
         end,
@@ -304,39 +330,137 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
       overlayChildBuilder: _overlayEntryBuilder,
       child: CompositedTransformTarget(
         link: _buttonLayerLink,
-        child: widget.buttonBuilder(context, isActive, toggle),
+        child: widget.buttonBuilder(context, _controller),
       ),
     );
   }
 
-  /// Whether the speed dial is open or closed.
+  @override
+  void dispose() {
+    _cleanupController(widget);
+    _animationController.dispose();
+    super.dispose();
+  }
+}
 
-  bool get isActive =>
-      _controller.status == AnimationStatus.forward ||
-      _controller.status == AnimationStatus.completed;
+/// Can be used to control the state of the speed dial via `open()`, `close()` and `toggle()` functions.
+///
+/// This is a [ChangeNotifier] that can be listened to that fires whenever the
+/// [status] of the speed dial changes.
+///
+/// Remember to dispose the controller when no longer needed.
+
+class SpeedDialController extends ChangeNotifier {
+
+  AnimationController? _animationController;
+
+  OverlayPortalController? _overlayPortalController;
+
+  /// Main animation that drives the individual speed dial item animations.
+  ///
+  /// Can be used in the main button or backdrop builder to animate them with
+  /// the same rate the entire speed dial animates.
+
+  Animation<double> get animation {
+    assert(isAttached, 'SpeedDialController $this is not attached to a widget yet.');
+    return _animationController!;
+  }
+
+  /// State of the speed dial.
+  ///
+  /// Changes to this will trigger any listener callbacks.
+
+  SpeedDialStatus get status {
+    if (isAttached) {
+      switch (_animationController!.status) {
+        case AnimationStatus.completed: return SpeedDialStatus.opened;
+        case AnimationStatus.forward: return SpeedDialStatus.opening;
+        case AnimationStatus.reverse: return SpeedDialStatus.closing;
+        case AnimationStatus.dismissed: return SpeedDialStatus.closed;
+      }
+    }
+    return SpeedDialStatus.closed;
+  }
+
+  /// Whether the speed dial is opened or currently opening.
+  ///
+  /// This is essentially a short form of [status].
+
+  bool get isActive => status == SpeedDialStatus.opened || status == SpeedDialStatus.opening;
+
+  /// Whether the controller is attached to a speed dial or not.
+
+  bool get isAttached => _animationController != null && _overlayPortalController != null;
 
   /// Open/Close the speed dial.
 
   void toggle() {
-    if (_controller.isDismissed) {
-      _overlayPortalController.show();
-      _controller.forward();
-    } else {
-      _controller.reverse();
+    if (isAttached) {
+      if (_animationController!.status == AnimationStatus.dismissed || _animationController!.status == AnimationStatus.reverse) {
+        open();
+      } else {
+        close();
+      }
+    }
+  }
+
+  /// Open the speed dial.
+
+  void open() {
+    if (isAttached && (_animationController!.status == AnimationStatus.dismissed || _animationController!.status == AnimationStatus.reverse)) {
+      _overlayPortalController!.show();
+      _animationController!.forward();
     }
   }
 
   /// Close the speed dial.
 
   void close() {
-    if (!_controller.isDismissed) {
-      _controller.reverse();
+    if (isAttached && (_animationController!.status == AnimationStatus.completed || _animationController!.status == AnimationStatus.forward)) {
+      _animationController!.reverse().then((_) {
+        if (isAttached) _overlayPortalController!.hide();
+      });
     }
   }
 
+  void _attach(AnimationController animationController, OverlayPortalController overlayPortalController) {
+    _animationController?.removeStatusListener(_notifyListeners);
+    _animationController = animationController..addStatusListener(_notifyListeners);
+    _overlayPortalController = overlayPortalController;
+    // notify due to status/animation changes
+    notifyListeners();
+  }
+
+  void _detach() {
+    _animationController?.removeStatusListener(_notifyListeners);
+    _animationController = null;
+    _overlayPortalController = null;
+    // notify due to status/animation changes
+    notifyListeners();
+  }
+
+  void _notifyListeners(AnimationStatus status) => notifyListeners();
+
   @override
   void dispose() {
-    _controller.dispose();
+    _detach();
     super.dispose();
   }
+}
+
+
+/// The status of the [SpeedDialBuilder].
+
+enum SpeedDialStatus {
+  /// The [SpeedDialBuilder] items are completely visible.
+  opened,
+
+  /// The [SpeedDialBuilder] items are in the progress of becoming visible.
+  opening,
+
+  /// The [SpeedDialBuilder] items are in the progress of becoming hidden.
+  closing,
+
+  /// The [SpeedDialBuilder] items are completely hidden.
+  closed,
 }
