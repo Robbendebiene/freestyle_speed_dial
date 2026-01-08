@@ -1,5 +1,6 @@
 library freestyle_speed_dial;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 typedef SpeedDialButtonBuilder = Widget Function(
@@ -306,7 +307,8 @@ class _SpeedDialBuilderState<T> extends State<SpeedDialBuilder<T>>
     index = widget.reverse ? widget.items.length - index - 1 : index;
 
     final start = index * _intervalOffset;
-    final end = start + _intervalLength;
+    // clamp required in order to prevent <=1 assertion error caused by arithmetic imprecisions
+    final end = clampDouble(start + _intervalLength, 0, 1);
 
     return CurvedAnimation(
       parent: _animationController,
